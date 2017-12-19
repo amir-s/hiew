@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+const path = require('path');
+const Hue = require('philips-hue');
+const fs = require('fs');
+const fuzzy = require('fuzzy');
+require('colors');
+
+if (process.argv.length <= 3) {
+  console.error('Usage: '.bold.black + 'lights names command'.gray);
+  process.exit(1);
+}
+const cmd = {
+  names: process.argv[2],
+  verb: process.argv[3],
+}
+
+const config = JSON.parse(fs.readFileSync(`${process.env.HOME}/.hue.json`, 'utf8'));
+
+var hue = new Hue();
+hue.bridge = config.bridge;
+hue.username = config.username;
+
+const mapping = {
+  'bedroom': [4],
+  'entryway': [2, 3],
+  'livingroom': [1],
+  'all': [1, 2, 3, 4],
+};
+
+const lights = mapping[cmd.names] || Object.keys(fuzzy.filter(cmd.names, Object.keys(mapping)).map(i => mapping[i.string]).reduce((s, i) => {
+  i.forEach(l => s[l] = true);
+  return s;
+}, {})).map(i => ~~i);
+
+const commands = {
+  on: i => hue.light(i).on(),
+  off: i => hue.light(i).off(),
+  sleep: i => hue.light(i).setState({bri: 50, sat: 150, hue: 65000})
+};
+
+const cmds = fuzzy.filter(cmd.verb, Object.keys(commands)).map(i => i.string);
+if (cmds.length != 1) {
+  console.error('Unknown command'.red.bold);
+  process.exit(1);
+}
+
+lights.map(commands[cmds[0]]);
