@@ -35,13 +35,28 @@ const lights = mapping[cmd.names] || Object.keys(fuzzy.filter(cmd.names, Object.
 const commands = {
   on: i => hue.light(i).on(),
   off: i => hue.light(i).off(),
-  sleep: i => hue.light(i).setState({bri: 50, sat: 150, hue: 65000})
+  sleep: i => hue.light(i).setState({bri: 50, sat: 150, hue: 65000}),
+  white: i => hue.light(i).setState({bri: 200, sat: 38, hue: 9523}),
+  warm: i => hue.light(i).setState({bri: 200, sat: 132, hue: 8488}),
+  red: i => hue.light(i).setState({bri: 200, sat: 255, hue: 62604}),
+  purpul: i => hue.light(i).setState({bri: 200, sat: 227, hue: 52078}),
+  blue: i => hue.light(i).setState({bri: 200, sat: 227, hue: 46014}),
+  ice: i => hue.light(i).setState({bri: 200, sat: 254, hue: 43725}),
+  sky: i => hue.light(i).setState({bri: 200, sat: 249, hue: 39303}),
+  green: i => hue.light(i).setState({bri: 200, sat: 228, hue: 24709}),
+  yellow: i => hue.light(i).setState({bri: 200, sat: 254, hue: 11656}),
+  orange: i => hue.light(i).setState({bri: 200, sat: 254, hue: 5894}),
+  '+D': i => hue.light(i).getInfo().then(({state}) => hue.light(i).setState({bri: Math.min(state.bri+90, 255)})),
+  '-D': i => hue.light(i).getInfo().then(({state}) => hue.light(i).setState({bri: Math.max(state.bri-90, 0)})),
+  '+d': i => hue.light(i).getInfo().then(({state}) => hue.light(i).setState({bri: Math.min(state.bri+40, 255)})),
+  '-d': i => hue.light(i).getInfo().then(({state}) => hue.light(i).setState({bri: Math.max(state.bri-40, 0)})),
+  info: i => hue.light(i).getInfo().then(console.log),
 };
 
 const cmds = fuzzy.filter(cmd.verb, Object.keys(commands)).map(i => i.string);
-if (cmds.length != 1) {
+if (cmds.length != 1 && !commands[cmd.verb]) {
   console.error('Unknown command'.red.bold);
   process.exit(1);
 }
-
+const final = cmds.length == 1 ? cmds[0] : cmd;
 lights.map(commands[cmds[0]]);
